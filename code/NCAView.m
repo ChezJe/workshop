@@ -3,7 +3,7 @@ classdef NCAView < handle
     properties ( Access = private )
         NCApanel
         GridLayout
-        BackgroundColor = [1,1,1]
+        Model
     end
 
     properties ( Hidden )
@@ -15,29 +15,28 @@ classdef NCAView < handle
     properties ( Access = public ) 
         FontName                (1,1) string = "Helvetica"
         NCAoptions              % options for NCA calculations
-        ConcentrationColumnName (1,1) string = "Complex"
-        
     end
 
-    properties ( Dependent )
-        Color
+    properties (SetObservable)
+        ConcentrationColumnName (1,1) string = "Complex"
+        BackgroundColor (1,3) double {mustBeBetween(BackgroundColor,0,1)} = [1,1,1]
     end
-    
+
     properties( Access = private )
         DataListener % listener
     end
     
     methods
-        function obj = NCAView(parent, model)
+        function obj = NCAView(parent, model, responseName)
 
             arguments
                 parent 
                 model (1,1) SimulationModel
+                responseName (1,1) string = "Complex"
             end
             
+            % Create Panel
             ncapanel = uipanel(parent);
-            ncapanel.Title = "NCA parameters for bound target ('" + ...
-                obj.ConcentrationColumnName + "')";
             ncapanel.BackgroundColor = obj.BackgroundColor;
             ncapanel.FontName = obj.FontName;
             ncapanel.BorderType = 'none';
@@ -52,50 +51,61 @@ classdef NCAView < handle
             % Create NCAtable
             ncat = uitable(gl);
         
-            % save NCA options 
+            % Save NCA options 
             opt = sbioncaoptions;
-            opt.concentrationColumnName = obj.ConcentrationColumnName;
+            opt.concentrationColumnName = responseName;
             opt.timeColumnName          = 'Time';
             opt.IVDoseColumnName        = 'Dose';
-
-            % instantiate listener
-            dataListener = event.listener( model, 'DataChanged', ...
-                @obj.update );
             
-            % store listeners
-            obj.DataListener = dataListener;
-            
-            % save objects
+            % Save objects
             obj.NCAoptions = opt;
             obj.NCApanel = ncapanel;
             obj.GridLayout = gl;
             obj.NCAtable = ncat;
-            
-        end % constructor
-        
-        function set.Color(obj,value)
-            obj.BackgroundColor = value;
-            obj.NCApanel.BackgroundColor = value;
-            obj.GridLayout.BackgroundColor = value;
-        end
+            obj.Model = model;
+            obj.ConcentrationColumnName = responseName;
 
-        function value = get.Color(obj)
-            value = obj.BackgroundColor;
-        end
+            % Update Panel title
+            updateTitle(obj);
+
+            % Instantiate listener for model
+            obj.DataListener = event.listener( model, 'DataChanged', ...
+                @obj.update );
+
+            % Instantiate listeners for properties
+            addlistener(obj,'ConcentrationColumnName','PostSet',@obj.setColumnName);
+            addlistener(obj,'BackgroundColor','PostSet',@obj.setColor);
+
+        end % constructor
    
     end % public methods
     
     methods ( Access = private )
         
         function update(obj,srcModel,~)
-
             % compute NCA parameters and display them in table
             ncaParameters = sbionca(srcModel.SimDataTable, obj.NCAoptions);
             obj.NCAtable.ColumnName = ncaParameters.Properties.VariableNames(2:end);
-            obj.NCAtable.Data = ncaParameters(:,2:end);
-            
+            obj.NCAtable.Data = ncaParameters(:,2:end);        
         end % update
 
+        function setColor(obj,~,~)
+            obj.NCApanel.BackgroundColor = obj.BackgroundColor;
+            obj.GridLayout.BackgroundColor = obj.BackgroundColor;
+        end % setColor
+
+        function setColumnName(obj,~,~)
+            obj.NCAoptions.concentrationColumnName = obj.ConcentrationColumnName;
+            update(obj,obj.Model,[]);
+            updateTitle(obj)
+        end % setColumnName
+
+        function updateTitle(obj)
+            obj.NCApanel.Title = "NCA parameters for species '" + ...
+                obj.ConcentrationColumnName + "'";
+        end % updateTitle
+
     end % private method
+
 end % class
 
