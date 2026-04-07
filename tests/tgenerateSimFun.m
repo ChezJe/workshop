@@ -6,7 +6,7 @@ classdef tgenerateSimFun < matlab.unittest.TestCase
     end
 
     properties (ClassSetupParameter)
-        MATfilename = {"test_generateSimFun.mat"}
+        MATfilename = {"test_generateSimFun.mat", string.empty}
     end
 
     properties (TestParameter)
@@ -56,7 +56,7 @@ classdef tgenerateSimFun < matlab.unittest.TestCase
                 testCase.MATfilefullpath = generateSimFun(MATfilename);
 
                 % delete file with testCase.addTeardown
-                testCase.addTeardown(@delete,testCase.MATfilefullpath);
+                % testCase.addTeardown(@delete,testCase.MATfilefullpath);
             end
             testCase.LoadedData = load(testCase.MATfilefullpath);
 
