@@ -145,6 +145,20 @@
                     </Category>
                 </Info>
             </File>
+            <File Location="SimulationModelTest.m">
+                <Info>
+                    <Category UUID="FileClassCategory">
+                        <Label UUID="test"/>
+                    </Category>
+                </Info>
+            </File>
+            <File Location="tSimulatedModel.m">
+                <Info>
+                    <Category UUID="FileClassCategory">
+                        <Label UUID="test"/>
+                    </Category>
+                </Info>
+            </File>
         </File>
         <File Location=".gitattributes">
             <Info/>
