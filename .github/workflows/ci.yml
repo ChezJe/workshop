@@ -3,12 +3,11 @@ name: MATLAB Build
 
 # Controls when the action will run. 
 on:
-  # Triggers the workflow on push events, but only for the main branch
   push:
     branches: [ main ]
   
   pull_request:
-    branches:
+    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -23,11 +22,10 @@ permissions:
   pages: write
   id-token: write
 
-# Only allow one build of this type to run at a time
-# Ensure results publishing completes without being interrupted/overwritten
+# Avoid the test job to be run before and after auto-merging of dev branch if not up-to-date
 concurrency:
   group: "test"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
 
@@ -51,14 +49,14 @@ jobs:
 
       # Set up MATLAB on a GitHub-hosted runner
       - name: Setup MATLAB
-        uses: matlab-actions/setup-matlab@v2
+        uses: matlab-actions/setup-matlab@v3
         with:
           products: ${{ env.PRODUCT_LIST }}
           cache: true
 
       # Run the MATLAB build tool to build and test your code
       - name: Run buildtool
-        uses: matlab-actions/run-build@v2
+        uses: matlab-actions/run-build@v3
         with:
           tasks: test 
 
@@ -90,21 +88,21 @@ jobs:
 
       # Set up MATLAB on a GitHub-hosted runner
       - name: Setup MATLAB
-        uses: matlab-actions/setup-matlab@v2
+        uses: matlab-actions/setup-matlab@v3
         with:
           products: ${{ env.PRODUCT_LIST }}
           cache: true
 
       # Run the MATLAB build tool to build and test your code
       - name: Run buildtool
-        uses: matlab-actions/run-build@v2
+        uses: matlab-actions/run-build@v3
         with:
           tasks: test  # change to compile
 
       # Configure GitHub Pages to accept your artifact uploads
       - name: Setup Pages
         if: always()
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       # Upload testing and code coverage reports to your repository
       - name: Upload pages
@@ -124,7 +122,7 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         if: always()
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
 
       # ==================================== #
@@ -133,12 +131,12 @@ jobs:
 
       ## Runs your tests using `runtests` command
       #- name: Run all tests
-      #  uses: matlab-actions/run-tests@v2
+      #  uses: matlab-actions/run-tests@v3
       #  with:
       #    source-folder: code
 
       ## Executes custom MATLAB scripts, functions, or statements
       #- name: Run custom testing procedure
-      #  uses: matlab-actions/run-command@v2
+      #  uses: matlab-actions/run-command@v3
       #  with:
       #    command: disp('Running my custom testing procedure!'); addpath('code'); results = runtests('IncludeSubfolders', true); assertSuccess(results);
